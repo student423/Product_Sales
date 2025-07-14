@@ -1,0 +1,304 @@
+-- create database 
+CREATE DATABASE db_sales;
+USE db_sales;
+
+-- create table
+DROP TABLE customer_data;
+CREATE TABLE customer_data(
+ORDERNUMBER	INT,
+QUANTITYORDERED	INT,
+PRICEEACH FLOAT,	
+ORDERLINENUMBER INT,
+SALES	FLOAT,
+ORDERDATE	TEXT,
+STATUS	VARCHAR(25),
+QTR_ID	INT,
+MONTH_ID	INT,
+YEAR_ID	 INT,
+PRODUCTLINE	VARCHAR(50),
+MSRP	INT,
+PRODUCTCODE	VARCHAR(50),
+CUSTOMERNAME VARCHAR(200),	
+PHONE	TEXT,
+ADDRESSLINE1	VARCHAR(250),
+ADDRESSLINE2 VARCHAR(200),	
+CITY	VARCHAR(100),
+STATE	VARCHAR(50),
+POSTALCODE	VARCHAR(50),
+COUNTRY	VARCHAR(50),
+TERRITORY	VARCHAR(50),
+CONTACTLASTNAME	VARCHAR(50),
+CONTACTFIRSTNAME	VARCHAR(50),
+DEALSIZE VARCHAR(50)
+
+);
+
+--  check column data types
+SELECT COLUMN_NAME, DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'customer_data';
+
+-- Data cleaning and processing
+-- Convert ORDERDATE (text) into proper DATE format
+SET SQL_SAFE_UPDATES=0;
+
+UPDATE customer_data
+SET ORDERDATE = STR_TO_DATE(ORDERDATE, '%m/%d/%Y %H:%i');
+
+-- change data type
+ALTER TABLE customer_data
+MODIFY COLUMN ORDERDATE DATE;
+
+-- check orderdate column data
+SELECT
+ORDERDATE
+FROM customer_data;
+
+-- check row data
+SELECT *
+FROM customer_data;
+
+-- check blank values whole column and set null values
+SELECT COUNT(*)
+FROM customer_data
+WHERE ADDRESSLINE2='';
+
+SELECT COUNT(*)
+FROM customer_data
+WHERE STATE='';
+
+ SELECT COUNT(*)
+FROM customer_data
+WHERE  POSTALCODE='';
+
+SELECT COUNT(*)
+FROM customer_data
+WHERE DEALSIZE='';
+
+-- set values which colm has blank data
+UPDATE customer_data
+SET ADDRESSLINE2='No Address'
+WHERE ADDRESSLINE2='';
+
+UPDATE customer_data
+SET STATE = 'No State'
+WHERE STATE='';
+
+UPDATE customer_data
+SET POSTALCODE = 'No Code'
+WHERE  POSTALCODE='';
+
+-- check null values in dataset
+SELECT 
+  SUM(CASE WHEN QUANTITYORDERED IS NULL THEN 1 ELSE 0 END) AS QUANTITYORDERED,
+  SUM(CASE WHEN PRICEEACH IS NULL THEN 1 ELSE 0 END) AS PRICEEACH,
+  SUM(CASE WHEN ORDERLINENUMBER IS NULL THEN 1 ELSE 0 END) AS ORDERLINENUMBER,
+  SUM(CASE WHEN SALES IS NULL THEN 1 ELSE 0 END) AS SALES,
+  SUM(CASE WHEN ORDERDATE IS NULL THEN 1 ELSE 0 END) AS ORDERDATE,
+  SUM(CASE WHEN STATUS IS NULL THEN 1 ELSE 0 END) AS STATUS,
+  SUM(CASE WHEN QTR_ID IS NULL THEN 1 ELSE 0 END) AS QTR_ID,
+  SUM(CASE WHEN MONTH_ID IS NULL THEN 1 ELSE 0 END) AS MONTH_ID,
+  SUM(CASE WHEN YEAR_ID IS NULL THEN 1 ELSE 0 END) AS YEAR_ID,
+  SUM(CASE WHEN PRODUCTLINE IS NULL THEN 1 ELSE 0 END) AS PRODUCTLINE,
+  SUM(CASE WHEN MSRP IS NULL THEN 1 ELSE 0 END) AS MSRP,
+  SUM(CASE WHEN PRODUCTCODE IS NULL THEN 1 ELSE 0 END) AS PRODUCTCODE,
+  SUM(CASE WHEN CUSTOMERNAME IS NULL THEN 1 ELSE 0 END) AS CUSTOMERNAME,
+  SUM(CASE WHEN PHONE IS NULL THEN 1 ELSE 0 END) AS PHONE,
+  SUM(CASE WHEN ADDRESSLINE1 IS NULL THEN 1 ELSE 0 END) AS ADDRESSLINE1,
+  SUM(CASE WHEN ADDRESSLINE2 IS NULL THEN 1 ELSE 0 END) AS ADDRESSLINE2,
+  SUM(CASE WHEN CITY IS NULL THEN 1 ELSE 0 END) AS CITY,
+  SUM(CASE WHEN STATE IS NULL THEN 1 ELSE 0 END) AS STATE,
+  SUM(CASE WHEN POSTALCODE IS NULL THEN 1 ELSE 0 END) AS POSTALCODE,
+  SUM(CASE WHEN COUNTRY IS NULL THEN 1 ELSE 0 END) AS COUNTRY,
+  SUM(CASE WHEN TERRITORY IS NULL THEN 1 ELSE 0 END) AS TERRITORY,
+  SUM(CASE WHEN CONTACTLASTNAME IS NULL THEN 1 ELSE 0 END) AS CONTACTLASTNAME,
+  SUM(CASE WHEN CONTACTFIRSTNAME IS NULL THEN 1 ELSE 0 END) AS CONTACTFIRSTNAME,
+  SUM(CASE WHEN DEALSIZE IS NULL THEN 1 ELSE 0 END) AS DEALSIZE
+FROM customer_data;
+
+-- Exploratory Data Analysis
+-- total orders
+SELECT COUNT(*) AS Total_Orders 
+FROM customer_data;
+
+-- total sales
+SELECT 
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data;
+
+-- order by status with orderby descending values
+SELECT STATUS,
+COUNT(*) AS total_orders
+FROM customer_data
+GROUP BY STATUS
+ORDER BY total_orders DESC;
+
+-- top 5 sales by country
+SELECT COUNTRY,
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data
+GROUP BY COUNTRY
+ORDER BY total_sales DESC
+LIMIT 5;
+
+-- top 5 productline by sales
+SELECT PRODUCTLINE,
+ROUND(SUM(SALES),2) AS total_sale
+FROM customer_data
+GROUP BY PRODUCTLINE
+ORDER BY total_sale DESC
+LIMIT 5;
+
+-- Total Sales by Year
+SELECT YEAR_ID AS year,
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data
+GROUP BY year
+ORDER BY total_sales DESC;
+
+-- Monthly and Year Sales Trend 
+SELECT YEAR_ID AS year,
+MONTH_ID AS month,
+ROUND(SUM(SALES),2) AS monthly_sales
+FROM customer_data
+GROUP BY year,month
+ORDER BY monthly_sales DESC
+LIMIT 5;
+
+-- Top 10 Best-Selling Products
+SELECT PRODUCTCODE,
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data
+GROUP BY PRODUCTCODE
+ORDER BY total_sales DESC
+LIMIT 10;
+
+-- Top 10 Customers by Revenue
+SELECT CUSTOMERNAME,
+ROUND(SUM(SALES),2) AS revenue
+FROM customer_data
+GROUP BY CUSTOMERNAME
+ORDER BY revenue
+LIMIT 10;
+
+-- Top 10 Orders by Country
+SELECT COUNTRY,
+COUNT(*) AS total_orders,
+ROUND(SUM(SALES),2) AS revenue
+FROM customer_data
+GROUP BY COUNTRY
+ORDER BY revenue DESC
+LIMIT 10;
+
+-- Sales by Deal Size
+SELECT DEALSIZE,
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data
+GROUP BY DEALSIZE
+ORDER BY total_sales DESC;
+
+ -- Percentage of Sales by Deal Size
+ SELECT DEALSIZE,
+ ROUND(SUM(SALES),2) AS total_sales,
+ CONCAT(ROUND(SUM(SALES)*100 / (SELECT SUM(SALES) FROM customer_data),2),'%') AS percentage_sales
+ FROM customer_data
+ GROUP BY DEALSIZE
+ ORDER BY total_sales DESC;
+ 
+ --  Product Line Performance by Sales %
+ SELECT PRODUCTLINE,
+ ROUND(SUM(SALES),2) AS total_sales,
+ CONCAT(ROUND(SUM(SALES)*100 / (SELECT SUM(SALES) FROM customer_data),2),'%') AS sales_percentage
+ FROM customer_data
+ GROUP BY PRODUCTLINE
+ ORDER BY total_sales DESC;
+ 
+ -- Classify Product Line as High / Medium / Low Performance (Based on Total Sales)
+ SELECT PRODUCTLINE,
+ ROUND(SUM(SALES),2) AS total_sales,
+ CASE
+ WHEN SUM(SALES)>= 1000000 THEN 'High_Performance'
+ WHEN SUM(SALES)>=500000 THEN 'Medium_Performance'
+ ELSE 'Low_Performance'
+ END AS performance_category
+ FROM customer_data
+ GROUP BY PRODUCTLINE
+ ORDER BY total_sales DESC;
+ 
+ -- Customer Segment by Revenue Tier
+ SELECT CUSTOMERNAME,
+ ROUND(SUM(SALES),2) AS total_sales,
+ CASE
+ WHEN SUM(SALES)>=100000 THEN 'Premium_customer'
+WHEN SUM(SALES)>=50000 THEN 'mid_level_customer'
+ELSE 'regular_customer'
+END AS customer_tier
+FROM customer_data
+GROUP BY CUSTOMERNAME
+ORDER BY total_sales DESC;
+
+-- Country Sales Share % and Rank
+SELECT COUNTRY,
+  ROUND(SUM(SALES), 2) AS total_sales,
+  ROUND(SUM(SALES) * 100 / (SELECT SUM(SALES) FROM customer_data), 2) AS sales_percentage,
+  RANK() OVER (ORDER BY SUM(SALES) DESC) AS sale_rank
+FROM customer_data
+GROUP BY COUNTRY
+LIMIT 5;
+
+-- Best Quarter for Sales
+SELECT QTR_ID,
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data
+GROUP BY QTR_ID
+ORDER BY total_sales DESC;
+
+-- Correlation Check (Quantity vs Sales)
+SELECT QUANTITYORDERED,
+ROUND(SUM(SALES),2) AS total_sales
+FROM customer_data
+GROUP BY QUANTITYORDERED
+ORDER BY total_sales DESC;
+
+-- Best Performing Products
+SELECT 
+  PRODUCTCODE,
+  PRODUCTLINE,
+  ROUND(SUM(SALES), 2) AS Total_Sales
+FROM customer_data
+GROUP BY PRODUCTCODE, PRODUCTLINE
+ORDER BY Total_Sales DESC
+LIMIT 10;
+
+-- Find customers whose purchase value decreased year-over-year
+SELECT CUSTOMERNAME,
+       MAX(CASE WHEN YEAR_ID = 2003 THEN SALES ELSE 0 END) AS Sales_2003,
+       MAX(CASE WHEN YEAR_ID = 2004 THEN SALES ELSE 0 END) AS Sales_2004,
+       MAX(CASE WHEN YEAR_ID = 2005 THEN SALES ELSE 0 END) AS Sales_2005
+FROM customer_data
+GROUP BY CUSTOMERNAME
+HAVING Sales_2005 < Sales_2004 AND Sales_2004 < Sales_2003;
+
+--  MSRP vs Actual Selling Price Gap
+SELECT PRODUCTLINE, 
+ROUND(AVG(MSRP - PRICEEACH), 2) AS Avg_Discount
+FROM customer_data
+GROUP BY PRODUCTLINE
+ORDER BY Avg_Discount DESC;
+
+--  Customers with Repeat Orders
+SELECT CUSTOMERNAME,
+COUNT(DISTINCT ORDERNUMBER) AS order_counts
+FROM customer_data
+GROUP BY CUSTOMERNAME
+HAVING order_counts>1
+ORDER BY order_counts DESC;
+
+-- Split datetime and find peak order hours
+SELECT HOUR(ORDERDATE) AS Order_Hour, 
+COUNT(*) AS Order_Count
+FROM customer_data
+GROUP BY Order_Hour
+ORDER BY Order_Count DESC;
+
+-- Thank you 
