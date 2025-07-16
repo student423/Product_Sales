@@ -3,7 +3,6 @@ CREATE DATABASE db_sales;
 USE db_sales;
 
 -- create table
-DROP TABLE customer_data;
 CREATE TABLE customer_data(
 ORDERNUMBER	INT,
 QUANTITYORDERED	INT,
